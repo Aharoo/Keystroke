@@ -14,6 +14,8 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.text.Text;
 import ua.aharoo.keystroke.model.Analyze;
+import ua.aharoo.keystroke.service.KeyStrokeService;
+import ua.aharoo.keystroke.service.StatisticsService;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -72,7 +74,7 @@ public class MainController {
     }
 
     @FXML
-    void onAnalyzeButtonClick(ActionEvent event) {
+    void onAnalyzeButtonClick(ActionEvent event) { // кнопка "Аналіз"
         symbol.setCellValueFactory(new PropertyValueFactory<>("Symbol"));
         pressTime.setCellValueFactory(new PropertyValueFactory<>("pressTime"));
         timeBetweenPress.setCellValueFactory(new PropertyValueFactory<>("timeBetweenPress"));
@@ -81,8 +83,8 @@ public class MainController {
     }
 
     @FXML
-    void onCheckButtonClick(ActionEvent event) {
-
+    void onCheckButtonClick(ActionEvent event) { // Кнопка "Перевірити"
+        KeyStrokeService.predict(resultTextField);
     }
 
     @FXML
@@ -91,7 +93,7 @@ public class MainController {
     }
 
     @FXML
-    void onResetButtonClick(ActionEvent event) {
+    void onResetButtonClick(ActionEvent event) { // кнопка "Скинути"
         analyzeList.clear();
         startPush = endPush = 0;
         i = 0;
@@ -100,12 +102,12 @@ public class MainController {
     }
 
     @FXML
-    void onSaveButtonClick(ActionEvent event) {
-        text_time_between += '\n';
-        text_time_between += '\n';
+    void onSaveButtonClick(ActionEvent event) { // кнопка "Зберегти"
+        text_time_between += "\n";
+        text_time_press += "\n";
 
-        try(BufferedWriter writer = new BufferedWriter(new FileWriter("time_between.txt"));
-        BufferedWriter writer1 = new BufferedWriter(new FileWriter("time_press.txt"))){
+        try(BufferedWriter writer = new BufferedWriter(new FileWriter("time_between.txt",true));
+        BufferedWriter writer1 = new BufferedWriter(new FileWriter("time_press.txt",true))){
              writer.write(text_time_between);
              writer1.write(text_time_press);
         } catch (IOException e){
@@ -114,6 +116,7 @@ public class MainController {
         k += 1;
         text_time_press = "";
         text_time_between = "";
+        onResetButtonClick(event);
 //        try {
 //            Files.deleteIfExists(Paths.get("time_between.txt"));
 //            Files.deleteIfExists(Paths.get("time_press.txt"));
@@ -141,14 +144,14 @@ public class MainController {
         i++; // збільшення ітератора для унікальності ключа
         work = String.format(" %d %s ",i, event.getCode().getName()); // Створення унікального ключа
 
-        text_time_between += time_between + '\t';
-        text_time_press += endPush + '\t';
+        text_time_between += time_between + "\t";
+        text_time_press += endPush + "\t";
 
         analyzeList.add(new Analyze(work, endPush, time_between));
     }
 
     @FXML
-    void onStatisticsButton(ActionEvent event) {
+    void onStatisticsButton(ActionEvent event) { // кнопка "Статистика"
 
     }
 

@@ -12,12 +12,12 @@ public class StatisticsService {
 
     // Розрахунок мат.очікування
     public static double[] mathematicalExpectation(double work, double[][] arr){
-        double [] arrM = new double[arr[1].length];
-        for (int i = 0; i < arr[1].length; i++){
-            for (int j = 0; j < arr[0].length; i++){
-                work += arr[j][i];
+        double [] arrM = new double[arr.length];
+        for (int i = 0; i < arr.length; i++){
+            for (int j = 0; j < arr[i].length; j++){
+                work += arr[i][j];
             }
-            arrM[i] = work / arr[0].length;
+            arrM[i] = work / arr.length;
             work = 0;
         }
         return arrM;
@@ -25,12 +25,12 @@ public class StatisticsService {
 
     // Розрахунок дисперсії
     public static double[] dispersion(double[][] arr, double[] arrM, double work){
-        double[] arrD = new double[arr[1].length];
-        for (int i = 0; i < arr[1].length; i++){
-            for (int j = 0; j < arr[0].length; j++){
-                work += Math.pow(arr[j][i] - arrM[i],2);
+        double[] arrD = new double[arr.length];
+        for (int i = 0; i < arr.length; i++){
+            for (int j = 0; j < arr[i].length; j++){
+                work += Math.pow(arr[i][j] - arrM[i],2);
             }
-            arrD[i] = work / (arr[0].length - 1);
+            arrD[i] = work / (arr[i].length - 1);
             work = 0;
         }
         return arrD;
@@ -109,20 +109,26 @@ public class StatisticsService {
         int m = list.size();
         int n = (int) Arrays.stream(list.get(0).split("\t")).count();
         double[][] arr = new double[m][n];
-        int j = 0;
 
         for (int i = 0; i < m; i++){
-            for(String s: (String[]) Arrays.stream(list.get(i).split("\t")).toArray()){
-                arr[i][j] = Double.valueOf(s);
-                j++;
+            String[] array = Arrays.stream(list.get(i).split("\t")).toArray(String[]::new);
+
+            for (int j = 0; j < array.length; j++){
+                arr[i][j] = Double.valueOf(array[j]);
             }
-            j = 0;
+
+//
+//            for(String s: array){
+//                arr[i][j] = Double.valueOf(s);
+//                j++;
+//            }
+
         }
         return arr;
     }
 
     // Запис підрахунку в файл
-    public static void Print(int[][] arr, double[] arm, double[] ard,
+    public static void print(int[][] arr, double[] arm, double[] ard,
                              double[][] arrKor, double[][] arrCov,
                              double[][] arrDov, String file){
         String str = "Матриця", work = "";
