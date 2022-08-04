@@ -1,6 +1,7 @@
 package ua.aharoo.keystroke.controller;
 
 import com.google.common.base.Stopwatch;
+import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -17,11 +18,13 @@ import ua.aharoo.keystroke.model.Analyze;
 import ua.aharoo.keystroke.service.KeyStrokeService;
 import ua.aharoo.keystroke.service.StatisticsService;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayDeque;
+import java.util.Arrays;
+import java.util.List;
 import java.util.ResourceBundle;
 import java.util.concurrent.TimeUnit;
 
@@ -40,11 +43,17 @@ public class MainController {
     @FXML
     private Button analyzeButton;
     @FXML
-    private TextField resultTextField;
-    @FXML
     private Text loginText;
     @FXML
+    private Text authorText;
+    @FXML
+    private Text nonAuthorText;
+    @FXML
+    private Text resultText;
+    @FXML
     private Button resetButton;
+    @FXML
+    private Button globalResetButton;
     @FXML
     private TableView<Analyze> resultTableView;
     @FXML
@@ -55,6 +64,8 @@ public class MainController {
     private TableColumn<Analyze, Double> timeBetweenPress;
     @FXML
     private Button statisticsButton;
+    @FXML
+    private Button globalSaveButton;
     private int i, k; // Порядковий номер
     private double time_between, timeBuffer; // Час між натиском клавіш та попередього натиску клавіши
     private static String work, text_time_between, text_time_press; // змінна для створення ключа + порядковий номер
@@ -84,7 +95,7 @@ public class MainController {
 
     @FXML
     void onCheckButtonClick(ActionEvent event) { // Кнопка "Перевірити"
-        KeyStrokeService.predict(resultTextField);
+        KeyStrokeService.predict(resultText,authorText,nonAuthorText);
     }
 
     @FXML
@@ -99,6 +110,17 @@ public class MainController {
         i = 0;
         work = "";
         loginTextField.clear();
+    }
+
+    @FXML
+    void onGlobalResetButton(ActionEvent event) {
+        onResetButtonClick(event);
+        try {
+            new PrintWriter("time_between_global.txt").close();
+            new PrintWriter("time_press_global.txt").close();
+        } catch (IOException e){
+            e.printStackTrace();
+        }
     }
 
     @FXML
@@ -127,6 +149,36 @@ public class MainController {
     }
 
     @FXML
+    void onGlobalSaveButtonClick(ActionEvent event) {
+        try(BufferedReader reader = new BufferedReader(new FileReader("time_between.txt"));
+        BufferedReader reader1 = new BufferedReader(new FileReader("time_press.txt"));
+        BufferedWriter writer = new BufferedWriter(new FileWriter("time_between_global.txt",true));
+        BufferedWriter writer1 = new BufferedWriter(new FileWriter("time_press_global.txt",true))){
+            String s;
+            while((s=reader.readLine())!=null) {
+                writer.write(s);
+                writer.write("\n");
+            }
+
+            s = "";
+            while((s = reader1.readLine())!= null) {
+                writer1.write(s);
+                writer1.write("\n");
+            }
+
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+
+        try {
+            new PrintWriter("time_between.txt").close();
+            new PrintWriter("time_press.txt").close();
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @FXML
     void onLoginTextFieldKeyPressed(KeyEvent event) {
         startPush = stopwatch.elapsed(TimeUnit.MILLISECONDS);
     }
@@ -152,12 +204,65 @@ public class MainController {
 
     @FXML
     void onStatisticsButton(ActionEvent event) { // кнопка "Статистика"
-
+        read();
     }
+
+
 
     @FXML
     void initialize() {
 
+    }
+
+    private void read(){
+        List<String> list_press;
+        List<String> list_between;
+        try {
+            list_between = Files.readAllLines(Paths.get("time_between_global.txt"));
+            list_press = Files.readAllLines(Paths.get("time_press_global.txt"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        for (int i = 0; i < list_press.size(); i++)
+            list_between.get(i).replace(" +"," ").trim();
+
+        for (int i = 0; i < list_between.size(); i++)
+            list_press.get(i).replace(" +"," ").trim();
+
+        int n = (int) Arrays.stream(list_between.get(0).split("\t")).count();
+        int l = (int) Arrays.stream(list_press.get(0).split("\t")).count();
+
+        double[][] res_between = new double[list_between.size()][n];
+        double[][] res_press = new double[list_press.size()][l];
+
+        for (int i = 0; i < list_between.size(); i++){
+            String[] array_between = Arrays.stream(list_between.get(i).split("\t")).toArray(String[]::new);
+
+            for (int j = 0; j < n; j++)
+                res_between[i][j] = Double.valueOf(array_between[j]);
+
+        }
+
+        for (int i = 0; i < list_press.size(); i++){
+            String[] array_press = Arrays.stream(list_press.get(i).split("\t")).toArray(String[]::new);
+
+            for (int j = 0; j < l; j++)
+                res_press[i][j] = Double.valueOf(array_press[j]);
+        }
+
+        double[] arrM = StatisticsService.mathematicalExpectation(0.0,res_between);
+        double[] arrD = StatisticsService.dispersion(res_between, arrM, 0.0);
+        double[][] arrKor = StatisticsService.correlation(arrM, res_between);
+        double[][] arrCov = StatisticsService.covariation(arrM, res_between);
+        double[][] arrDov = StatisticsService.confidenceInterval(arrM,arrD,res_between.length);
+        StatisticsService.print(res_between,arrM,arrD,arrKor,arrCov,arrDov,"time_between_global_results.txt");
+        arrM = StatisticsService.mathematicalExpectation(0.0,res_press);
+        arrD = StatisticsService.dispersion(res_press, arrM, 0.0);
+        arrKor = StatisticsService.correlation(arrM, res_press);
+        arrCov = StatisticsService.covariation(arrM, res_press);
+        arrDov = StatisticsService.confidenceInterval(arrM,arrD,res_press.length);
+        StatisticsService.print(res_press,arrM,arrD,arrKor,arrCov,arrDov,"time_press_global_results.txt");
     }
 
 }

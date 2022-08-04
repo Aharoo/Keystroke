@@ -12,10 +12,10 @@ public class StatisticsService {
 
     // Розрахунок мат.очікування
     public static double[] mathematicalExpectation(double work, double[][] arr){
-        double [] arrM = new double[arr.length];
-        for (int i = 0; i < arr.length; i++){
-            for (int j = 0; j < arr[i].length; j++){
-                work += arr[i][j];
+        double[] arrM = new double[arr[1].length];
+        for (int i = 0; i < arr[1].length; i++){
+            for (int j = 0; j < arr.length; j++){
+                work += arr[j][i];
             }
             arrM[i] = work / arr.length;
             work = 0;
@@ -25,23 +25,23 @@ public class StatisticsService {
 
     // Розрахунок дисперсії
     public static double[] dispersion(double[][] arr, double[] arrM, double work){
-        double[] arrD = new double[arr.length];
-        for (int i = 0; i < arr.length; i++){
-            for (int j = 0; j < arr[i].length; j++){
-                work += Math.pow(arr[i][j] - arrM[i],2);
+        double[] arrD = new double[arr[1].length];
+        for (int i = 0; i < arr[1].length; i++){
+            for (int j = 0; j < arr.length; j++){
+                work += Math.pow(arr[j][i] - arrM[i],2);
             }
-            arrD[i] = work / (arr[i].length - 1);
+            arrD[i] = work / (arr.length - 1);
             work = 0;
         }
         return arrD;
     }
 
     // Розрахунок матриці кореляцій
-    public static double[][] correlation(double[] arrM, int[][] arr, int n){
-        double[][] arrKor = new double[arr[0].length][arr[1].length];
+    public static double[][] correlation(double[] arrM, double[][] arr){
+        double[][] arrKor = new double[arr[1].length][arr[1].length];
 
         for (int i = 0; i < arr[1].length; i++){
-            for (int j = 0; j < arr[1].length; i++){
+            for (int j = 0; j < arr[1].length; j++){
                 arrKor[i][j] = upCor(i,j,arrM,arr) / downCor(i,j,arrM,arr);
             }
         }
@@ -49,19 +49,19 @@ public class StatisticsService {
     }
 
     // Розрахунок числівника в кореляції
-    public static double upCor(int j, int h, double[] arrM, int[][] arr){
+    public static double upCor(int j, int h, double[] arrM, double[][] arr){
         double res = 0;
-        for (int i = 0; i < arr[0].length; i++){
+        for (int i = 0; i < arr.length; i++){
             res += (arr[i][j] - arrM[j]) * (arr[i][h] - arrM[h]);
         }
         return res;
     }
 
     // Розрахунок знаменника в кореляції
-    public static double downCor(int j, int h, double[] arrM, int[][] arr){
+    public static double downCor(int j, int h, double[] arrM, double[][] arr){
         double res1 = 0, res2 = 0;
 
-        for (int i = 0; i < arr[0].length; i++){
+        for (int i = 0; i < arr.length; i++){
             res1 += Math.pow(arr[i][j] - arrM[j], 2);
             res2 += Math.pow(arr[i][h] - arrM[h], 2);
         }
@@ -69,18 +69,18 @@ public class StatisticsService {
     }
 
     // Розрахунок матриці коваріацій
-    public static double[][] covariation(double[] arrM, int[][] arr, int n){
+    public static double[][] covariation(double[] arrM, double[][] arr){
         double[][] arrCov = new double[arr[1].length][arr[1].length];
         for (int i = 0; i < arr[1].length; i++){
             for (int j = 0; j < arr[1].length; j++){
-                arrCov[i][j] = upCor(i,j,arrM,arr) / arr[0].length;
+                arrCov[i][j] = upCor(i,j,arrM,arr) / arr.length;
             }
         }
         return arrCov;
     }
 
     // Розрахунок довірчих інтервалів
-    public static double[][] confidenceInterval(double[] arrM, double[] arrD, int n ){
+    public static double[][] confidenceInterval(double[] arrM, double[] arrD, int n){
         double[][] arrDov = new double[2][arrM.length];
         for (int i = 0; i < 2; i++){
             for (int j = 0; j < arrM.length; j++){
@@ -94,17 +94,14 @@ public class StatisticsService {
     // Текст в масив
     public static double[][] mass(String file){
         List<String> list;
-        int z = 0;
         try {
             list = Files.readAllLines(Paths.get(file));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        for (int i = 0; i < list.size(); i++){
+        for (int i = 0; i < list.size(); i++)
             list.get(i).replace(" +"," ").trim();
-            z++;
-        }
 
         int m = list.size();
         int n = (int) Arrays.stream(list.get(0).split("\t")).count();
@@ -113,28 +110,22 @@ public class StatisticsService {
         for (int i = 0; i < m; i++){
             String[] array = Arrays.stream(list.get(i).split("\t")).toArray(String[]::new);
 
-            for (int j = 0; j < array.length; j++){
-                arr[i][j] = Double.valueOf(array[j]);
-            }
-
-//
-//            for(String s: array){
-//                arr[i][j] = Double.valueOf(s);
-//                j++;
-//            }
+            for (int j = 0; j < array.length; j++)
+                arr[i][j] = Double.parseDouble(array[j]);
 
         }
+
         return arr;
     }
 
     // Запис підрахунку в файл
-    public static void print(int[][] arr, double[] arm, double[] ard,
+    public static void print(double[][] arr, double[] arm, double[] ard,
                              double[][] arrKor, double[][] arrCov,
                              double[][] arrDov, String file){
-        String str = "Матриця", work = "";
-        for (int i = 0; i < arr[0].length; i++){
+        String str = "Матриця";
+        for (int i = 0; i < arr.length; i++){
             str += "\n\t";
-            for (int j = 0; j < arr[1].length; j++){
+            for (int j = 0; j < arr[i].length; j++){
                 str += arr[i][j] + "\t";
             }
         }
@@ -148,14 +139,14 @@ public class StatisticsService {
         for (int i = 0; i < ard.length; i++)
             str += Math.sqrt(ard[i]) + "\t";
         str += "\n\nКореляція:\t";
-        for (int i = 0; i < arr[1].length; i++){
+        for (int i = 0; i < arr.length; i++){
             str += "\n\t";
             for (int j = 0; j < arr[1].length; j++){
                 str += Math.round(arrKor[i][j]) + "\t";
             }
         }
         str += "\n\nКоваріація:\t";
-        for (int i = 0; i < arr[1].length; i++){
+        for (int i = 0; i < arr.length; i++){
             str += "\n\t";
             for (int j = 0; j < arr[1].length; j++){
                 str += Math.round(arrCov[i][j]) + "\t";
@@ -164,7 +155,7 @@ public class StatisticsService {
         str += "\n\nДовірчі інтервали:\t";
         for (int i = 0; i < 2; i++){
             str += "\n\t";
-            for (int j = 0; j < arr[0].length; j++){
+            for (int j = 0; j < arm.length; j++){
                 str += Math.round(arrDov[i][j]) + "\t";
             }
         }
