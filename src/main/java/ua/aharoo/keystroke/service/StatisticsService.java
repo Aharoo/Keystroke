@@ -139,14 +139,14 @@ public class StatisticsService {
         for (int i = 0; i < ard.length; i++)
             str += Math.sqrt(ard[i]) + "\t";
         str += "\n\nКореляція:\t";
-        for (int i = 0; i < arr.length; i++){
+        for (int i = 0; i < arr[1].length; i++){
             str += "\n\t";
             for (int j = 0; j < arr[1].length; j++){
                 str += Math.round(arrKor[i][j]) + "\t";
             }
         }
         str += "\n\nКоваріація:\t";
-        for (int i = 0; i < arr.length; i++){
+        for (int i = 0; i < arr[1].length; i++){
             str += "\n\t";
             for (int j = 0; j < arr[1].length; j++){
                 str += Math.round(arrCov[i][j]) + "\t";

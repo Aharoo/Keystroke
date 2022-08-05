@@ -66,7 +66,7 @@ public class MainController {
     private Button statisticsButton;
     @FXML
     private Button globalSaveButton;
-    private int i, k; // Порядковий номер
+    private int i; // Порядковий номер
     private double time_between, timeBuffer; // Час між натиском клавіш та попередього натиску клавіши
     private static String work, text_time_between, text_time_press; // змінна для створення ключа + порядковий номер
     private double startPush, endPush, lastTimePushed; // Час між натисканням
@@ -76,7 +76,6 @@ public class MainController {
     public MainController() {
         stopwatch = Stopwatch.createStarted();
         i = 0;
-        k = 0;
         lastTimePushed = 0;
         time_between = 0;
         text_time_between = "";
@@ -110,6 +109,13 @@ public class MainController {
         i = 0;
         work = "";
         loginTextField.clear();
+        KeyStrokeService.n1 = 0;
+        KeyStrokeService.a1 = 0;
+        authorText.setText("");
+        nonAuthorText.setText("");
+        resultText.setText("");
+        text_time_press = "";
+        text_time_between = "";
     }
 
     @FXML
@@ -135,17 +141,9 @@ public class MainController {
         } catch (IOException e){
             e.printStackTrace();
         }
-        k += 1;
         text_time_press = "";
         text_time_between = "";
         onResetButtonClick(event);
-//        try {
-//            Files.deleteIfExists(Paths.get("time_between.txt"));
-//            Files.deleteIfExists(Paths.get("time_press.txt"));
-//        } catch (IOException e){
-//            e.printStackTrace();
-//        }
-
     }
 
     @FXML
@@ -206,8 +204,6 @@ public class MainController {
     void onStatisticsButton(ActionEvent event) { // кнопка "Статистика"
         read();
     }
-
-
 
     @FXML
     void initialize() {

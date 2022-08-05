@@ -6,6 +6,8 @@ import org.apache.commons.math3.stat.correlation.Covariance;
 
 public class KeyStrokeService {
 
+    public static int n1 = 0, a1 = 0;
+
     public static void predict(Text resultText, Text authorText, Text nonAuthorText){
         double[][] res_between = StatisticsService.mass("time_between_global.txt");
         double[][] res_press = StatisticsService.mass("time_press_global.txt");
@@ -14,12 +16,9 @@ public class KeyStrokeService {
 
         double[] arrM = StatisticsService.mathematicalExpectation(0.0, V);
 
-        double[] arrD = StatisticsService.dispersion(V, arrM, 0.0);
-
         double[][] arrCov;
         arrCov = new Covariance(MatrixUtils.createRealMatrix(V)).getCovarianceMatrix().getData();
 
-        int info, n1 = 0, a1 = 0;
         //RealMatrix inverse = MatrixUtils.inverse(MatrixUtils.createRealMatrix(arrCov));
         double[][] res_bet_test = StatisticsService.mass("time_between.txt");
         double[][] res_pres_test = StatisticsService.mass("time_press.txt");
@@ -130,16 +129,9 @@ public class KeyStrokeService {
         return arrS;
     }
 
-    //TODO: Look out
     public static double[][] difference(double[][] between) {
-//        System.out.println("difference");
-//        for (int i = 0; i < between.length; i++){
-//            for (int j = 0; j < between[i].length; j++)
-//                System.out.print(between[i][j] + " ");
-//            System.out.println();
-//        }
 
-        double[][] arrD = new double[between[0].length][3];
+        double[][] arrD = new double[between.length][3];
 
         double[] arr = new double[between[0].length - 1];
 
@@ -172,7 +164,7 @@ public class KeyStrokeService {
 
     public static double max(double[][] arr, int h){
         double work = arr[h][0];
-        for (int i = 1; i < arr.length; i++){
+        for (int i = 1; i < arr[0].length; i++){
             if (arr[h][i] > work) work = arr[h][i];
         }
         return work;
