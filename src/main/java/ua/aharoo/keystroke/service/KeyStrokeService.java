@@ -47,6 +47,8 @@ public class KeyStrokeService {
             authorText.setText("Авторських спроб: " + a1);
             nonAuthorText.setText("Не авторських спроб: " + n1);
         }
+        a1 = 0;
+        n1 = 0;
     }
 
     public static double g(double[][] arrCov, double[] arrM, double[][] U){

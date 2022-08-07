@@ -15,6 +15,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.text.Text;
 import ua.aharoo.keystroke.model.Analyze;
+import ua.aharoo.keystroke.service.ErrorsHandler;
 import ua.aharoo.keystroke.service.KeyStrokeService;
 import ua.aharoo.keystroke.service.StatisticsService;
 
@@ -29,7 +30,6 @@ import java.util.ResourceBundle;
 import java.util.concurrent.TimeUnit;
 
 public class MainController {
-
     @FXML
     private ResourceBundle resources;
     @FXML
@@ -66,8 +66,11 @@ public class MainController {
     private Button statisticsButton;
     @FXML
     private Button globalSaveButton;
-    private int i; // Порядковий номер
+    private int i; // Порядковий номер символів
+    private int k; // Кількість збережених слів
+    private int workUp; // Погрешность при вводе клавиш
     private double time_between, timeBuffer; // Час між натиском клавіш та попередього натиску клавіши
+    private String word;
     private static String work, text_time_between, text_time_press; // змінна для створення ключа + порядковий номер
     private double startPush, endPush, lastTimePushed; // Час між натисканням
     private ObservableList<Analyze> analyzeList;
@@ -76,6 +79,9 @@ public class MainController {
     public MainController() {
         stopwatch = Stopwatch.createStarted();
         i = 0;
+        k = 0;
+        word = "";
+        workUp = -150;
         lastTimePushed = 0;
         time_between = 0;
         text_time_between = "";
@@ -120,6 +126,7 @@ public class MainController {
 
     @FXML
     void onGlobalResetButton(ActionEvent event) {
+        k = 0;
         onResetButtonClick(event);
         try {
             new PrintWriter("time_between_global.txt").close();
@@ -131,19 +138,24 @@ public class MainController {
 
     @FXML
     void onSaveButtonClick(ActionEvent event) { // кнопка "Зберегти"
-        text_time_between += "\n";
-        text_time_press += "\n";
+        if (loginTextField.getText().equals("") && i == 0) {
+            ErrorsHandler.emptyLoginFieldError();
+        } else {
+            text_time_between += "\n";
+            text_time_press += "\n";
 
-        try(BufferedWriter writer = new BufferedWriter(new FileWriter("time_between.txt",true));
-        BufferedWriter writer1 = new BufferedWriter(new FileWriter("time_press.txt",true))){
-             writer.write(text_time_between);
-             writer1.write(text_time_press);
-        } catch (IOException e){
-            e.printStackTrace();
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter("time_between.txt", true));
+                 BufferedWriter writer1 = new BufferedWriter(new FileWriter("time_press.txt", true))) {
+                writer.write(text_time_between);
+                writer1.write(text_time_press);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            text_time_press = "";
+            text_time_between = "";
+            k++;
+            onResetButtonClick(event);
         }
-        text_time_press = "";
-        text_time_between = "";
-        onResetButtonClick(event);
     }
 
     @FXML
@@ -187,7 +199,7 @@ public class MainController {
         endPush = lastTimePushed - startPush;
 
         if (i == 0) time_between = 0;
-        else time_between = startPush - timeBuffer;
+        else time_between = workUp + startPush - timeBuffer;
 
         timeBuffer = lastTimePushed;
 
@@ -234,17 +246,12 @@ public class MainController {
 
         for (int i = 0; i < list_between.size(); i++){
             String[] array_between = Arrays.stream(list_between.get(i).split("\t")).toArray(String[]::new);
-
-            for (int j = 0; j < n; j++)
-                res_between[i][j] = Double.valueOf(array_between[j]);
-
-        }
-
-        for (int i = 0; i < list_press.size(); i++){
             String[] array_press = Arrays.stream(list_press.get(i).split("\t")).toArray(String[]::new);
 
-            for (int j = 0; j < l; j++)
+            for (int j = 0; j < n; j++) {
+                res_between[i][j] = Double.valueOf(array_between[j]);
                 res_press[i][j] = Double.valueOf(array_press[j]);
+            }
         }
 
         double[] arrM = StatisticsService.mathematicalExpectation(0.0,res_between);
